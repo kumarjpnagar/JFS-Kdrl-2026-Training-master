@@ -1,0 +1,3 @@
+server:
+  port: 8080
+  address: 123.24.4.6
