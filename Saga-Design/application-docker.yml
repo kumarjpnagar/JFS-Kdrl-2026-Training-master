@@ -1,0 +1,23 @@
+server:
+  port: ${PORT:8761} # run it on physical port 8761 unless PORT environment variable is available
+
+eureka:
+  server:
+    # Expired entries get evicted from Eureka lease every 60s (configurable via the
+    # following property)
+    evictionIntervalTimerInMs: 20000
+    # The server maintains a response cache that is updated every 30s (or configurable
+    # via the following property)
+    # @see com.netflix.eureka.EurekaServerConfig.getResponseCacheUpdateIntervalMs()
+    responseCacheUpdateIntervalMs: 10000
+    # See the blog referenced above (under section 'Eureka Server') to see why
+    # the self-preservation mode is disabled here
+    enableSelfPreservation: false
+  instance:
+    hostname: ${virtual_host:localhost}
+    leaseRenewalIntervalInSeconds: 10
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/

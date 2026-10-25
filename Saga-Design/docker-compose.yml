@@ -1,0 +1,27 @@
+eureka:
+  image: local/eureka:0.2
+  ports:
+    - 8761:8080
+  environment:
+    - SPRING_PROFILES_ACTIVE=docker
+    - VIRTUAL_HOST=10.77.8.114
+    - PORT=8080
+
+location:
+  image: local/location:0.1
+  ports:
+    - 8082:8080
+  environment:
+    - SPRING_PROFILES_ACTIVE=docker
+    - EUREKA_HOST=dockerhost
+  extra_hosts:
+    - "dockerhost:10.77.8.114"
+item:
+  image: local/item:0.1
+  ports:
+    - 8083:8080
+  environment:
+    - SPRING_PROFILES_ACTIVE=docker
+    - EUREKA_HOST=dockerhost
+  extra_hosts:
+    - "dockerhost:10.77.8.114"

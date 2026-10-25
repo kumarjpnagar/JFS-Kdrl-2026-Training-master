@@ -1,104 +1,23 @@
 server:
-  #port: 8091
-  port: ${zuul.port:8092}
+  port: ${PORT:8761} # run it on physical port 8761 unless PORT environment variable is available
 
-#
-# Eureka configuration
-#
 eureka:
+  server:
+    # Expired entries get evicted from Eureka lease every 60s (configurable via the
+    # following property)
+    evictionIntervalTimerInMs: 20000
+    # The server maintains a response cache that is updated every 30s (or configurable
+    # via the following property)
+    # @see com.netflix.eureka.EurekaServerConfig.getResponseCacheUpdateIntervalMs()
+    responseCacheUpdateIntervalMs: 10000
+    # See the blog referenced above (under section 'Eureka Server') to see why
+    # the self-preservation mode is disabled here
+    enableSelfPreservation: false
   instance:
     hostname: ${virtual_host:localhost}
-    securePort: ${virtual_port:${unique.app.port}}
-    non-secure-port-enabled: ${eureka_instance_non_secure_port_enabled:true}
-    secure-port-enabled: ${eureka_instance_secure_port_enabled:false}
-    statusPageUrl: http://${virtual_host:localhost}:${virtual_port:${unique.app.port}}/info
-    healthCheckUrl: http://${virtual_host:localhost}:${virtual_port:${unique.app.port}}/health
-    homePageUrl: http://${virtual_host:localhost}:${virtual_port:${unique.app.port}}/
-    nonSecurePort: ${virtual_port:${unique.app.port}}
-    # It's not required to set eureka.instance.instanceId, as it defaults to CLIENT IP:PORT,
-    # but if you do set it, it must be unique within the scope of the appName
-    instanceId: ${spring.application.name}-${random.value}
-    # An instance registers with a Eureka server using a given URL; then onwards,
-    # it sends heartbeats every 30s (or configurable via the following property)
-    leaseRenewalIntervalInSeconds: 30
-    # If the server doesn't receive a heartbeat, it waits 90s (or configurable via the
-    # following property) before removing the instance from registry and there by
-    # disallowing traffic to that instance
-    leaseExpirationDurationInSeconds: 60
-    metadataMap:
-      instanceId: ${spring.application.name}-${random.value}
+    leaseRenewalIntervalInSeconds: 10
   client:
-    # Every instance is represented by an com.netflix.appinfo.InstanceInfo, which is a bunch of
-    # information about the instance. The InstanceInfo is sent to the Eureka server at regular
-    # intervals, starting at 40s after startup (or configurable via the following property)
-    initialInstanceInfoReplicationIntervalSeconds: 15
-    # ... and then onwards every 30s (or configurable via the following property)
-    instanceInfoReplicationIntervalSeconds: 20
-    # If eureka.client.fetchRegistry is true, the client fetches the Eureka server registry
-    # at startup and caches it locally
-    fetchRegistry: true
-    # The registry fetch is an asynchronous task scheduled every 30s (or configurable via the
-    # following property)
-    registryFetchIntervalSeconds: 10
+    registerWithEureka: false
+    fetchRegistry: false
     serviceUrl:
-      # docker is the value mapping to the VM running docker; defined in hosts file
-      # if not using docker, define 'xxx.xxx.xxx.xxx  dockerhost' (without quotes) as an entry in hosts file
-      # where 'xxx.xxx.xxx.xxx' is the IP address of your host VM (Ubuntu, Boot2Docker or your Mac/Windows)
-      defaultZone: http://${eureka.host:dockerhost}:${eureka.port:8761}/eureka/
-
-
-keycloak:
-  auth-server-url: http://${keycloak.host:dockerhost}:${keycloak.port:8091}/auth
-  realm: ${customer.realm:igs}
-  ssl-required: external
-  resource: ${zuul.client:zuulrouter}
-  public-client: false
-  ## bearer-only should be true for non ui logon or token based
-  bearer-only: false
-  security-constraints:
-  - authRoles: ['users', 'admin']
-  credentials:
-    secret: ${secret.key}
-  realm-key: ${realm.key}
-
-## Secured / authenticated end points
-keycloak.securityConstraints[0].securityCollections[0].name: "secured end points"
-keycloak.securityConstraints[0].securityCollections[0].patterns[0]: "/*"
-
-zuul:
-  sensitive-headers: 'Authorization'
-  routes:
-    logs:
-      path: /logs/**
-      url: http://${logs.host:dockerhost}:${logs.port:5601}/app/kibana
-    logs-ui:
-      path: /ui/**
-      url: http://${logs.host:dockerhost}:${logs.port:5601}/ui
-    logs-bundles:
-      path: /bundles/**
-      url: http://${logs.host:dockerhost}:${logs.port:5601}/bundles
-    logs-plugins:
-      path: /plugins/**
-      url: http://${logs.host:dockerhost}:${logs.port:5601}/plugins
-    logs-api:
-      path: /api/**
-      url: http://${logs.host:dockerhost}:${logs.port:5601}/api
-    logs-app:
-      path: /app/**
-      url: http://${logs.host:dockerhost}:${logs.port:5601}/app/
-      stripPrefix: true
-    logs-elasticsearch:
-      path: /elasticsearch/**
-      url: http://${logs.host:dockerhost}:${logs.port:5601}/elasticsearch
-    registry:
-      path: /registry/**
-      url: http://${registry.host:dockerhost}:${registry.port:8761}/
-    registry-static:
-      path: /eureka/**
-      url: http://${registry.host:dockerhost}:${registry.port:8761}/eureka/
-    registry-lastn:
-      path: /lastn/**
-      url: http://${registry.host:dockerhost}:${registry.port:8761}/lastn/
-    uifacade:
-      path: /uifacade/**
-      url: http://${uifacade.host:dockerhost}:${uifacade.port:4000}/graphql
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
